@@ -70,7 +70,7 @@ function renderHud(){
  const need=i===2&&!state.rooted?"A ROOT CAN CARRY THIS LOAD":i===3&&!state.heart?"THE HEART NEEDS A PULSE":state.spans[i]?"THE VINE IS READY TO CROSS":"A PATH IS WAITING TO GROW";
  $("action-label").textContent=state.current===4?"THE LAST DECISION":need;
  $("action-hint").textContent=state.ending?"The story is complete.":i===4?"Choose what holds the sky.":state.spans[i]?"Cross the vine, or press F to ride it.":selected==="climber"?"Sow a green seed to grow a bridge.":selected==="root"?"Roots find supports that leaves cannot see.":selected==="pulse"?"A crystal heartbeat needs a blue pulse.":"Plant a flower to remember this island.";
- $("sow").innerHTML=i===4?'THE FINAL CHOICE <span>E</span>':'SOW '+selected.toUpperCase()+' <span>E</span>';
+ $("sow").innerHTML=i===4?'THE FINAL CHOICE <span>E</span>':state.spans[i]?'FOLLOW GROWN VINE <span>F</span>':'SOW '+selected.toUpperCase()+' <span>E</span>';
  $("load-wrap").hidden=!(i===2||i===4);
  const load=state.rooted?42:94;
  $("load-fill").style.width=load+"%";
@@ -156,7 +156,7 @@ function start(){
 }
 $("start").addEventListener("click",start);
 $("story-next").addEventListener("click",()=>{overlayHide("story-overlay");const cb=storyAfterContinue;storyAfterContinue=null;if(cb)cb();else paused=false;});
-$("sow").addEventListener("click",sow);
+$("sow").addEventListener("click",()=>{if(state.current<4&&state.spans[state.current])follow();else sow();});
 $("choose-keep").addEventListener("click",()=>choose("keep"));
 $("choose-release").addEventListener("click",()=>choose("release"));
 $("play-again").addEventListener("click",reset);
