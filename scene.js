@@ -199,6 +199,19 @@ function bloomMesh(world,id,num){
  flower(m,pts[13],.79,[PINK,BLUE,GOLD,GREEN][num%4]);
  return m;
 }
+function targetMesh(world,index){
+ const m=mesh(),s=world.spans[index],p=[s.end.x,s.end.y+1.45,s.end.z],col=[GREEN,GOLD,BLUE,PINK][index];
+ tube(m,[[p[0],p[1]-1.1,p[2]],[p[0],p[1]+1,p[2]]],.09,[.55,.70,.48],7);
+ shard(m,[p[0],p[1]+.9,p[2]],.39,col);
+ for(let k=0;k<16;k++){
+  const a=k*TAU/16,b=(k+1)*TAU/16;
+  tri(m,[p[0]+.91*Math.cos(a),p[1]+.20,p[2]+.91*Math.sin(a)],
+        [p[0]+.91*Math.cos(b),p[1]+.20,p[2]+.91*Math.sin(b)],
+        [p[0]+1.02*Math.cos(a),p[1]+.21,p[2]+1.02*Math.sin(a)],col);
+ }
+ flower(m,[p[0],p[1]+1.7,p[2]],.37,[GOLD,PINK,BLUE,GREEN][index]);
+ return m;
+}
 function avatarMesh(){
  const m=mesh();
  orb(m,[0,.63,0],.32,[.63,.70,.42],7,10,0,[1,1.6,.80]);orb(m,[0,1.30,0],.27,[.90,.72,.55],6,10);
@@ -259,7 +272,9 @@ function create(canvas,world){
  const scenery=worldMesh(world),sky=upload(scenery.cloud),trees=upload(scenery.solid),
  islands=world.islands.map((p,i)=>upload(islandMesh(p,i,world.seed))),
  bridges=world.spans.map(s=>upload(bridgeMesh(s,world.seed))),
+ beacons=world.spans.map((_,i)=>upload(targetMesh(world,i))),
  blooms=[],actor=upload(avatarMesh());
+ const tip=upload((()=>{const m=mesh();orb(m,[0,0,0],.30,[.89,.99,.63],5,9);return m;})());
  let pin=upload(pinMesh(world,false)),heart=upload(heartMesh(world,false)),keeper=upload(keeperMesh(world,null));
  let width=0,height=0;
  const camera={yaw:-1.0,pitch:.47,distance:19,eye:[0,0,0],target:[0,0,0],vp:null};
@@ -284,8 +299,13 @@ function create(canvas,world){
   resize();updateCamera(player);gl.viewport(0,0,width,height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.useProgram(program);
   gl.uniformMatrix4fv(uni.uVP,false,new Float32Array(camera.vp));gl.uniform3fv(uni.uEye,camera.eye);
-  draw(trees);for(const m of islands)draw(m);draw(pin,1,.30);draw(heart,1,state.heart?.45:.12);draw(keeper,1,.25);
-  for(let i=0;i<4;i++)if(state.spans[i])draw(bridges[i],growth[i]??1,.17);
+  draw(trees);for(const m of islands)draw(m);draw(pin,1,.30);draw(heart,1,state.heart?.44+.24*Math.sin(time*1.5):.12);draw(keeper,1,.25);
+  for(let i=0;i<4;i++){
+   if(state.spans[i]){
+    draw(bridges[i],growth[i]??1,.17);
+    if((growth[i]??1)<.998){const p=bridgePoint(world.spans[i],growth[i]);draw(tip,1,1,1,p);}
+   }else if(state.current===i)draw(beacons[i],1,.62+.18*Math.sin(time*1.6));
+  }
   for(const m of blooms)draw(m,1,.40);
   const bob=player.moving?.05*Math.sin(time*9):0;
   draw(actor,1,.16,1,[player.x,player.y+bob,player.z]);
