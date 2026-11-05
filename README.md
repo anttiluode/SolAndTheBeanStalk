@@ -1,4 +1,7 @@
 # Sol and the Beanstalk 🌱
+
+![pic](pic.png)
+
 ### The Weight of the Sky — a playable living fairy tale
 
 A third-person, browser-based 3D story about growing paths across the clouds and discovering who carries their weight. Built in plain JavaScript and native WebGL2. No game engine, no external models, no backend, no webcam, no tracking.
