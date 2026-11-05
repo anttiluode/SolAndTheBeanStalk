@@ -42,6 +42,25 @@ jobs:
           grep -q 'src="core.js"' index.html
           grep -q 'src="scene.js"' index.html
           grep -q 'src="game.js"' index.html
+  browser:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser driver
+        run: npm install --no-save --no-package-lock playwright-core
+      - name: Inspect live WebGL2 world and plant first vine
+        run: node tests/browser-smoke.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: beanstalk-browser-check
+          path: beanstalk-browser.png
+          if-no-files-found: ignore
+          retention-days: 7
   publish:
     needs: verify
     runs-on: ubuntu-latest
