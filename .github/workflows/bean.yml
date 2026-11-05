@@ -25,6 +25,17 @@ jobs:
           node --check game.js
       - name: Run progression and geometry tests
         run: node --test tests/*.test.cjs
+      - name: Package playable build for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: sol-beanstalk-source
+          path: |
+            index.html
+            style.css
+            core.js
+            scene.js
+            game.js
+          retention-days: 7
       - name: Verify static page references
         run: |
           test -f index.html
@@ -39,11 +50,18 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
+      - id: setup
+        uses: actions/configure-pages@v5
         with:
           enablement: true
+        continue-on-error: true
+      - name: Explain any Pages setup limitation
+        if: steps.setup.outcome != 'success'
+        run: echo "::warning title=GitHub Pages setting required::In repo Settings / Pages choose GitHub Actions for Build and deployment."
       - uses: actions/upload-pages-artifact@v3
+        if: steps.setup.outcome == 'success'
         with:
           path: .
       - id: deploy
+        if: steps.setup.outcome == 'success'
         uses: actions/deploy-pages@v4
