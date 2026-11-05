@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07181c">
+<title>Sol and the Beanstalk — The Weight of the Sky</title>
+<meta name="description" content="A playable 3D story of living bridges, magical seeds, and the things that carry the sky.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="world" aria-label="Interactive three-dimensional beanstalk world"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div id="crosshair" aria-hidden="true">✦</div>
+<div class="hud" id="hud">
+  <header class="mast">
+    <div class="overline">A LIVING FAIRY TALE · CHAPTER <span id="chapter-number">I</span> OF V</div>
+    <h1>Sol <em>&amp;</em> the Beanstalk</h1>
+    <div class="subtitle" id="region">THE LAST BEAN · BELOW THE CLOUDS</div>
+  </header>
+  <div class="top-right">
+    <button id="sound" class="glass tiny" title="Turn original synthesized garden sounds on or off" aria-pressed="false">♪ Sound off</button>
+    <button id="help" class="glass tiny" title="Show controls">? Controls</button>
+    <button id="reset" class="glass tiny" title="Start a different world">↻ New world</button>
+  </div>
+  <aside class="compass glass" aria-live="polite">
+    <div class="micro">THE PATH AHEAD</div>
+    <div id="objective">One small bean. A very large sky.</div>
+    <div class="progress" id="progress" aria-label="Journey progress"><span class="on"></span><span></span><span></span><span></span><span></span></div>
+    <div id="load-wrap" class="load" hidden><div class="load-top"><span>THE SHARED PIN</span><strong id="load-text">UNSTABLE</strong></div><div class="load-track"><i id="load-fill"></i></div></div>
+  </aside>
+  <div class="center-message" id="toast" role="status" aria-live="polite"></div>
+  <div class="action glass" id="action-box">
+    <div class="micro" id="action-label">CLOSE TO THE GARDEN</div>
+    <div id="action-hint">Select a seed, then press E to sow.</div>
+    <button id="sow" class="sow">SOW SEED <span>E</span></button>
+  </div>
+  <footer class="hotbar" aria-label="Seed inventory">
+    <button class="seed active" data-seed="climber" aria-pressed="true"><i class="pod green">✤</i><span><strong>Climber</strong><small>Grow a living bridge</small></span><b id="count-climber">1</b><kbd>1</kbd></button>
+    <button class="seed" data-seed="root" aria-pressed="false"><i class="pod gold">❉</i><span><strong>Root</strong><small>Carry a hidden load</small></span><b id="count-root">0</b><kbd>2</kbd></button>
+    <button class="seed" data-seed="bloom" aria-pressed="false"><i class="pod pink">✿</i><span><strong>Bloom</strong><small>Leave something beautiful</small></span><b id="count-bloom">1</b><kbd>3</kbd></button>
+    <button class="seed" data-seed="pulse" aria-pressed="false"><i class="pod blue">✧</i><span><strong>Pulse</strong><small>Wake the sleeping heart</small></span><b id="count-pulse">0</b><kbd>4</kbd></button>
+  </footer>
+  <div class="control-strip">WASD MOVE <span>·</span> SPACE JUMP <span>·</span> DRAG LOOK <span>·</span> E SOW <span>·</span> F FOLLOW VINE <span>·</span> 1–4 SEEDS</div>
+</div>
+<div class="overlay show" id="welcome" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+  <section class="storybook glass">
+    <div class="micro">THE WEIGHT OF THE SKY · A PLAYABLE STORY</div>
+    <div class="bean-emblem">✺</div>
+    <h2 id="welcome-title">Sol <i>&amp;</i> the Beanstalk</h2>
+    <p class="quote">“My grandmother left me one bean and a question:<br><em>who holds up the sky?</em>”</p>
+    <p>Grow bridges through a sky of floating gardens. Collect strange seed pods. Mend what is breaking. Travel into the hollow heart of a giant stalk—and decide what it means to carry a world.</p>
+    <button class="primary" id="start">ENTER THE GARDEN <span>↗</span></button>
+    <div class="fine">A self-contained WebGL2 world · No account, tracking, or webcam · Progress saved on this device</div>
+  </section>
+</div>
+<div class="overlay" id="story-overlay" role="dialog" aria-modal="true" aria-labelledby="story-title" hidden>
+  <section class="story-card glass">
+    <div class="micro" id="story-label">FIELD NOTE · I</div>
+    <h2 id="story-title"></h2>
+    <p class="story-voice" id="story-voice"></p>
+    <p id="story-body"></p>
+    <button class="primary" id="story-next">CONTINUE <span>↗</span></button>
+  </section>
+</div>
+<div class="overlay" id="ending-overlay" role="dialog" aria-modal="true" aria-labelledby="ending-title" hidden>
+  <section class="story-card glass ending-card">
+    <div class="micro">THE LAST GARDEN</div>
+    <h2 id="ending-title">Find what carries the load.</h2>
+    <p id="ending-intro">Below you, every bridge you grew trembles in the sky. The keeper has been holding the old pin for so long that the roots have grown through his hands.</p>
+    <div id="choice-buttons" class="choices">
+      <button id="choose-keep"><span class="choice-icon">❉</span><strong>PLANT THE LAST ROOT</strong><small>Take the burden into the living world.</small></button>
+      <button id="choose-release"><span class="choice-icon">✧</span><strong>RELEASE THE OLD CHAIN</strong><small>Let the sky become something else.</small></button>
+    </div>
+    <div id="epilogue" hidden><p class="story-voice" id="epilogue-text"></p><p class="moral" id="epilogue-moral"></p><button class="primary" id="play-again">GROW ANOTHER WORLD ↗</button></div>
+  </section>
+</div>
+<div class="overlay" id="help-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title" hidden>
+  <section class="story-card glass help-card">
+    <div class="micro">FIELD GUIDE</div><h2 id="help-title">How to grow the sky</h2>
+    <p>Walk with <b>W A S D</b> (arrow keys work too). <b>Space</b> jumps; hold <b>Shift</b> to run. Drag to orbit your view and scroll to zoom. On touch devices, use the movement pad and drag the sky to look.</p>
+    <p>Choose seeds using <b>1–4</b> or the bottom bar. Stand on the island where you want to act and press <b>E</b> or <b>Sow Seed</b>. Green seeds grow a wide walkable vine to the next island. When it flowers, walk across—or press <b>F</b> to follow it safely.</p>
+    <p>Seeds are earned as you reach new islands. Gold roots stabilize a shared pin, blue pulses awaken the hollow heart, and pink blooms decorate the path. If you fall, the garden catches you at your latest island.</p>
+    <p>The world reshapes with its URL seed. It keeps the story solvable while the islands, flowers and details change.</p>
+    <button class="primary" id="close-help">BACK TO THE GARDEN ↗</button>
+  </section>
+</div>
+<div id="touch" aria-label="Touch movement controls">
+  <div class="dpad"><button data-move="w" aria-label="Forward">▲</button><div><button data-move="a" aria-label="Left">◀</button><button data-move="s" aria-label="Back">▼</button><button data-move="d" aria-label="Right">▶</button></div></div>
+  <div class="touch-right"><button id="touch-jump">JUMP</button><button id="touch-follow">FOLLOW</button></div>
+</div>
+<div id="fatal" hidden><h2>The world needs WebGL2.</h2><p id="fatal-msg">Try Chrome, Edge, or Firefox with hardware acceleration enabled.</p></div>
+<script src="core.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
