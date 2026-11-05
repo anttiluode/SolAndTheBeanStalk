@@ -79,7 +79,7 @@ function bridgeMesh(span,seed){
  }
  return m;
 }
-function islandMesh(p,id,seed){
+function islandMesh(p,id,seed,world){
  const m=mesh(),rand=B.rng(seed+"island"+id),pal=PAL[id],N=48,R=6;
  function pos(r,k){const a=k*TAU/N,rr=p.r*r/R*(1+.06*Math.sin(a*5+p.tilt)+.04*Math.sin(a*11-p.tilt)),x=p.x+Math.cos(a)*rr,z=p.z+Math.sin(a)*rr;
   return [x,p.y+Math.sin((x-p.x)*.37+p.tilt)*Math.cos((z-p.z)*.31-p.tilt)*.16-.08*Math.pow(r/R,4),z];}
@@ -98,8 +98,11 @@ function islandMesh(p,id,seed){
   if(rand()<.79)leaf(m,[x,y,z],.13+rand()*.30,[.37+rand()*.08,.54+rand()*.16,.26+rand()*.07]);
   else flower(m,[x,y+.08,z],.13+rand()*.13,pal[2]);
  }
- for(let j=0;j<5;j++){
-  const a=rand()*TAU,r=p.r*(.30+rand()*.38),x=p.x+Math.cos(a)*r,z=p.z+Math.sin(a)*r,y=p.y;
+ // Keep the player and forward bridge visible.
+ const target=world.islands[Math.min(4,id+1)],route=id<4?Math.atan2(target.z-p.z,target.x-p.x):0;
+ for(let j=0;j<(id===3?0:id===0?3:id===4?2:4);j++){
+  const a=rand()*TAU,r=p.r*(.54+rand()*.24),x=p.x+Math.cos(a)*r,z=p.z+Math.sin(a)*r,y=p.y;
+  if(id<4&&Math.cos(a-route)>.58){j--;continue;}
   const height=2.5+rand()*3.4,path=[];
   for(let k=0;k<=11;k++){const t=k/11;path.push([x+.17*Math.sin(t*5+j),y+height*t,z+.16*Math.cos(t*4+j)]);}
   tube(m,path,.17,[.30,.34,.26],7);
@@ -109,6 +112,16 @@ function islandMesh(p,id,seed){
    orb(m,end,.66+rand()*.36,[.25+rand()*.12,.47+rand()*.13,.28+rand()*.12],5,8,0,[1,.85,1.1]);
    if(rand()<.6)flower(m,add(end,[0,.65,0]),.22,pal[2]);
   }
+ }
+ // Tall flower clusters give the islands a more organic silhouette.
+ for(let j=0;j<10;j++){
+  const a=j*TAU/10+p.tilt,r=p.r*(.61+.16*rand());
+  const x=p.x+Math.cos(a)*r,z=p.z+Math.sin(a)*r,h=.62+rand()*.92;
+  const stem=[[x,p.y,z],[x+.20*Math.cos(a+1),p.y+h*.50,z+.20*Math.sin(a+1)],
+              [x+.28*Math.cos(a),p.y+h,z+.28*Math.sin(a)]];
+  tube(m,stem,.045,[.40,.67,.37],6);
+  leaf(m,stem[1],.30,[.47,.75,.37]);
+  flower(m,stem[2],.30+rand()*.17,pal[2]);
  }
  return m;
 }
@@ -120,6 +133,8 @@ function worldMesh(world){
   const strand=path.map((v,j)=>add(v,[Math.sin(j*.25+q*TAU/4)*2,0,Math.cos(j*.25+q*TAU/4)*2]));
   tube(m,strand,.30,[.31,.46,.31],7);
  }
+ const sap=path.map((p,j)=>add(p,[2.18*Math.sin(j*.31+.2),0,2.18*Math.cos(j*.31+.2)]));
+ tube(m,sap,.11,[.30,.76,.77],7);
  for(let i=7;i<96;i+=4){
   const q=path[i],a=i*2.1,pt=add(q,[Math.sin(a)*2.4,0,Math.cos(a)*2.4]);
   leaf(m,pt,1.3,[.38,.63,.40]);if(i%12===7)flower(m,add(pt,[0,1.1,0]),.63,[.95,.63,.70]);
@@ -134,10 +149,10 @@ function worldMesh(world){
   }
   orb(m,[x,top+.3,z],.40,[.75,.59,.41],4,7);
  }
- for(const q of world.islands)for(let i=0;i<9;i++){
+ for(const q of world.islands)for(let i=0;i<6;i++){
   const a=rand()*TAU,r=q.r*(.30+rand()*.9);
   orb(cloud,[q.x+r*Math.cos(a),q.y-4-rand()*3,q.z+r*Math.sin(a)],
-       2+rand()*4,[.57+rand()*.08,.71+rand()*.06,.78],4,8,0,[1.8,.3,1.2]);
+       2+rand()*3,[.57+rand()*.08,.71+rand()*.06,.78],7,12,0,[1.7,.30,1.2]);
  }
  for(let i=0;i<45;i++){
   shard(m,[-30+rand()*95,4+rand()*55,-95+rand()*120],.06+rand()*.15,[.60,.82,.95]);
@@ -170,6 +185,13 @@ function heartMesh(world,awake){
  for(let i=0;i<8;i++){
   const a=i*TAU/8,rr=awake?2.2:1.4;
   shard(m,[c[0]+Math.cos(a)*rr,c[1]+.2*Math.sin(a*2),c[2]+Math.sin(a)*rr],.44,awake?[.73,.92,.98]:[.38,.59,.72]);
+ }
+ // Capillary-like pipes carry sap from the giant crystal organ.
+ for(let j=0;j<12;j++){
+  const a=j*TAU/12,pts=[];
+  for(let k=0;k<=12;k++){const t=k/12,r=t*4.5;
+   pts.push([c[0]+Math.cos(a)*r,c[1]-t*4.2+.22*Math.sin(t*TAU),c[2]+Math.sin(a)*r]);}
+  tube(m,pts,.08,awake?[.38,.83,.87]:[.29,.51,.62],5);
  }
  return m;
 }
@@ -239,7 +261,7 @@ const vs=[
 const fs=[
  "#version 300 es","precision highp float;",
  "in vec3 vPos;in vec3 vNormal;in vec3 vColor;in float vProgress;",
- "uniform vec3 uEye;uniform float uVisible;uniform float uGlow;uniform float uAlpha;",
+ "uniform vec3 uEye;uniform float uVisible;uniform float uGlow;uniform float uAlpha;uniform float uTime;",
  "out vec4 outColor;",
  "void main(){",
  " if(vProgress>uVisible+.003)discard;",
@@ -250,6 +272,9 @@ const fs=[
  " vec3 c=vColor*(shade*stripe+rim)+vColor*uGlow*.28;",
  " float fog=smoothstep(38.,112.,distance(uEye,vPos))*.80;",
  " vec3 sky=mix(vec3(.28,.41,.50),vec3(.61,.67,.72),clamp((vPos.y+15.)/100.,0.,1.));",
+ " float tissue=max(0.,vColor.b-vColor.r*.65);",
+ " float pulse=.5+.5*sin(uTime*2.4-vPos.y*1.5+vPos.x*.4);",
+ " c+=vec3(.03,.09,.12)*tissue*pulse;",
  " c=mix(c,sky,fog);outColor=vec4(c,uAlpha);",
  "}"
 ].join("\n");
@@ -259,7 +284,7 @@ function create(canvas,world){
  function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
  const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vs));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(program);
  if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
- const uni={};for(const n of ["uVP","uOffset","uEye","uVisible","uGlow","uAlpha"])uni[n]=gl.getUniformLocation(program,n);
+ const uni={};for(const n of ["uVP","uOffset","uEye","uVisible","uGlow","uAlpha","uTime"])uni[n]=gl.getUniformLocation(program,n);
  const attrs=["aPosition","aNormal","aColor","aProgress"].map(n=>gl.getAttribLocation(program,n));
  function upload(m){
   const vao=gl.createVertexArray();gl.bindVertexArray(vao);
@@ -270,7 +295,7 @@ function create(canvas,world){
  }
  function replace(old,m){gl.deleteBuffer(old.buf);gl.deleteVertexArray(old.vao);return upload(m);}
  const scenery=worldMesh(world),sky=upload(scenery.cloud),trees=upload(scenery.solid),
- islands=world.islands.map((p,i)=>upload(islandMesh(p,i,world.seed))),
+ islands=world.islands.map((p,i)=>upload(islandMesh(p,i,world.seed,world))),
  bridges=world.spans.map(s=>upload(bridgeMesh(s,world.seed))),
  beacons=world.spans.map((_,i)=>upload(targetMesh(world,i))),
  blooms=[],actor=upload(avatarMesh());
@@ -298,7 +323,7 @@ function create(canvas,world){
  function frame(time,player,state,growth){
   resize();updateCamera(player);gl.viewport(0,0,width,height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.useProgram(program);
-  gl.uniformMatrix4fv(uni.uVP,false,new Float32Array(camera.vp));gl.uniform3fv(uni.uEye,camera.eye);
+  gl.uniformMatrix4fv(uni.uVP,false,new Float32Array(camera.vp));gl.uniform3fv(uni.uEye,camera.eye);gl.uniform1f(uni.uTime,time);
   draw(trees);for(const m of islands)draw(m);draw(pin,1,.30);draw(heart,1,state.heart?.44+.24*Math.sin(time*1.5):.12);draw(keeper,1,.25);
   for(let i=0;i<4;i++){
    if(state.spans[i]){
@@ -310,7 +335,7 @@ function create(canvas,world){
   const bob=player.moving?.05*Math.sin(time*9):0;
   draw(actor,1,.16,1,[player.x,player.y+bob,player.z]);
   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
-  gl.depthMask(false);draw(sky,1,.15,.15);gl.depthMask(true);gl.disable(gl.BLEND);
+  gl.depthMask(false);draw(sky,1,.14,.10);gl.depthMask(true);gl.disable(gl.BLEND);
  }
  function project(p){
   if(!camera.vp)return null;
