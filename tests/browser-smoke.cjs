@@ -29,6 +29,34 @@ const {chromium}=require("playwright-core");
  await page.waitForTimeout(700);
  assert.equal(await page.evaluate(()=>BeanDebug.state.spans[0]),true,"First vine bridge didn't plant");
  await page.screenshot({path:"beanstalk-browser.png",fullPage:true});
+ // Let the complete braided bridge flower and inspect it.
+ await page.waitForTimeout(3800);
+ await page.screenshot({path:"beanstalk-grown.png",fullPage:true});
+ // Exercise the complete browser story, including both support interventions.
+ async function arrive(i){
+  await page.evaluate(id=>{BeanDebug.restorePlayer(id);BeanDebug.enter(id);},i);
+  await page.locator("#story-next").click();
+ }
+ await arrive(1);
+ await page.evaluate(()=>{BeanDebug.selectSeed("climber");BeanDebug.sow();});
+ assert.equal(await page.evaluate(()=>BeanDebug.state.spans[1]),true);
+ await arrive(2);
+ await page.evaluate(()=>{BeanDebug.selectSeed("root");BeanDebug.sow();});
+ assert.equal(await page.evaluate(()=>BeanDebug.state.rooted),true);
+ await page.evaluate(()=>{BeanDebug.selectSeed("climber");BeanDebug.sow();});
+ assert.equal(await page.evaluate(()=>BeanDebug.state.spans[2]),true);
+ await arrive(3);
+ await page.evaluate(()=>{BeanDebug.selectSeed("pulse");BeanDebug.sow();});
+ assert.equal(await page.evaluate(()=>BeanDebug.state.heart),true);
+ await page.evaluate(()=>{BeanDebug.selectSeed("climber");BeanDebug.sow();});
+ assert.equal(await page.evaluate(()=>BeanDebug.state.spans[3]),true);
+ await page.waitForTimeout(300);
+ await page.screenshot({path:"beanstalk-heart.png",fullPage:true});
+ await arrive(4);
+ assert.equal(await page.locator("#ending-overlay").isVisible(),true);
+ await page.locator("#choose-keep").click();
+ assert.equal(await page.evaluate(()=>BeanDebug.state.ending),"keep");
+
  console.log("PNG beanstalk-browser.png created");
  assert.deepEqual(errors,[],"Browser errors");
  await browser.close();
