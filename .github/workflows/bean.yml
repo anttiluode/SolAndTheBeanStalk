@@ -58,7 +58,10 @@ jobs:
         if: always()
         with:
           name: beanstalk-browser-check
-          path: beanstalk-browser.png
+          path: |
+            beanstalk-browser.png
+            beanstalk-grown.png
+            beanstalk-heart.png
           if-no-files-found: ignore
           retention-days: 7
   publish:
